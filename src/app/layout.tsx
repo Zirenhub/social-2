@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist, Inter } from "next/font/google";
 import Providers from "./providers";
+import { stackHeadline } from "../app/_fonts/fonts";
 
 export const metadata: Metadata = {
   title: "Social",
@@ -15,18 +16,24 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+// const inter = Inter({
+//   subsets: ["latin"],
+//   variable: "--font-inter",
+// });
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html suppressHydrationWarning lang="en" className={`${geist.variable}`}>
+    <html
+      suppressHydrationWarning
+      lang="en"
+      className={`${stackHeadline.variable}`}
+    >
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <main className="min-h-screen w-full">{children}</main>
+        </Providers>
       </body>
     </html>
   );

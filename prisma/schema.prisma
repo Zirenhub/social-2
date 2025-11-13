@@ -1,32 +1,61 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
     provider = "prisma-client-js"
 }
 
 datasource db {
     provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
     url      = env("DATABASE_URL")
 }
 
+
+enum GENDER {
+  MALE
+  FEMALE
+  OTHER
+}
+
 model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
+    id        String   @id @default(uuid())
+    content   String   @db.Text
+    profileId String
+    published Boolean  @default(true)
+    imageUrls String[] // Array of image URLs
+    videoUrl  String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
+    profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-    @@index([name])
+    @@index([profileId]) 
 }
 
-// Necessary for Next auth
+model Profile {
+    id            String   @id @default(uuid())
+    userId        String   @unique
+    firstName     String
+    lastName      String
+    username      String   @unique
+    bio           String?  @db.Text
+    avatarUrl     String?
+    coverImageUrl String?
+    location      String?
+    website       String?
+    birthDate     DateTime?
+    phoneNumber   String?
+    gender        GENDER?
+    isVerified    Boolean  @default(false)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    // One-to-one relation with User
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    posts        Post[]
+
+    @@index([username])
+    @@index([firstName, lastName])
+}
+
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
@@ -55,14 +84,14 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+    id              String    @id @default(cuid())
+    email           String?   @unique
+    emailVerified   DateTime?
+    hashedPassword  String? 
+    accounts        Account[]
+    sessions        Session[]
+
+    profile Profile?
 }
 
 model VerificationToken {

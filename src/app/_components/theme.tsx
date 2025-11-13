@@ -4,8 +4,13 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Moon, Sun } from "lucide-react";
+import { cn } from "~/lib/utils";
 
-function Theme() {
+type Props = {
+  className?: string;
+};
+
+function Theme({ className }: Props) {
   const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -20,16 +25,16 @@ function Theme() {
 
   return (
     <Button
+      className={cn(
+        "dark:bg-background outline-accent-background cursor-pointer",
+        className,
+      )}
       variant="outline"
       size="icon"
       aria-label="Toggle theme"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
-      {theme === "dark" ? (
-        <Sun className="h-[1.2rem] w-[1.2rem]" />
-      ) : (
-        <Moon className="h-[1.2rem] w-[1.2rem]" />
-      )}
+      {theme === "dark" ? <Sun /> : <Moon />}
     </Button>
   );
 }

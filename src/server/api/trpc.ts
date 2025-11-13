@@ -7,6 +7,7 @@
  * need to use are documented accordingly near the end.
  */
 
+import { Prisma } from "@prisma/client";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -52,6 +53,13 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
         ...shape.data,
         zodError:
           error.cause instanceof ZodError ? error.cause.flatten() : null,
+        prismaError:
+          error.cause instanceof Prisma.PrismaClientKnownRequestError
+            ? {
+                code: error.cause.code,
+                meta: error.cause.meta,
+              }
+            : null,
       },
     };
   },
