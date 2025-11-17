@@ -1,12 +1,11 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
-
 
 enum GENDER {
   MALE
@@ -15,89 +14,282 @@ enum GENDER {
 }
 
 model Post {
-    id        String   @id @default(uuid())
-    content   String   @db.Text
-    profileId String
-    published Boolean  @default(true)
-    imageUrls String[] // Array of image URLs
-    videoUrl  String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  profileId String
+  published Boolean  @default(true)
+  imageUrls String[]
+  videoUrl  String?
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile       Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  notifications Notification[]
+  hashtags      PostHashtag[]
 
-    @@index([profileId]) 
+  @@index([profileId])
+  @@index([createdAt])
 }
 
 model Profile {
-    id            String   @id @default(uuid())
-    userId        String   @unique
-    firstName     String
-    lastName      String
-    username      String   @unique
-    bio           String?  @db.Text
-    avatarUrl     String?
-    coverImageUrl String?
-    location      String?
-    website       String?
-    birthDate     DateTime?
-    phoneNumber   String?
-    gender        GENDER?
-    isVerified    Boolean  @default(false)
-    createdAt     DateTime @default(now())
-    updatedAt     DateTime @updatedAt
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  firstName     String
+  lastName      String
+  username      String   @unique
+  bio           String?  @db.Text
+  avatarUrl     String?
+  coverImageUrl String?
+  location      String?
+  website       String?
+  birthDate     DateTime?
+  phoneNumber   String?
+  gender        GENDER?
+  isVerified    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-    // One-to-one relation with User
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    posts        Post[]
+  posts        Post[]
+  comments     Comment[]
+  likes        Like[]
+  bookmarks    Bookmark[]
+  followers    Follow[]  @relation("ProfileFollowers")
+  following    Follow[]  @relation("ProfileFollowing")
+  notificationsSent     Notification[] @relation("NotificationActor")
+  notificationsReceived Notification[] @relation("NotificationRecipient")
 
-    @@index([username])
-    @@index([firstName, lastName])
+  @@index([username])
+  @@index([firstName, lastName])
 }
 
 model Account {
-    id                       String  @id @default(cuid())
-    userId                   String
-    type                     String
-    provider                 String
-    providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
-    expires_at               Int?
-    token_type               String?
-    scope                    String?
-    id_token                 String? // @db.Text
-    session_state            String?
-    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refresh_token_expires_in Int?
 
-    @@unique([provider, providerAccountId])
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
-    id              String    @id @default(cuid())
-    email           String?   @unique
-    emailVerified   DateTime?
-    hashedPassword  String? 
-    accounts        Account[]
-    sessions        Session[]
-
-    profile Profile?
+  id              String    @id @default(cuid())
+  email           String?   @unique
+  emailVerified   DateTime?
+  hashedPassword  String?
+  accounts        Account[]
+  sessions        Session[]
+  profile         Profile?
 }
 
 model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
+  @@unique([identifier, token])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profileId String
+  postId    String
+
+  profile       Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([profileId])
+  @@index([postId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  profileId String
+  postId    String
+
+  profile       Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@unique([profileId, postId])
+  @@index([profileId])
+  @@index([postId])
+  @@map("likes")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  profileId String
+  postId    String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, postId])
+  @@index([profileId])
+  @@index([postId])
+  @@index([createdAt])
+  @@map("bookmarks")
+}
+
+model Follow {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  followerId  String
+  followingId String
+
+  follower      Profile        @relation("ProfileFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  following     Profile        @relation("ProfileFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@index([createdAt])
+  @@map("follows")
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
+  MENTION
+  REPLY
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  actorId     String
+  recipientId String
+  postId      String?
+  commentId   String?
+  followId    String?
+  likeId      String?
+
+  actor     Profile  @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  recipient Profile  @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  follow    Follow?  @relation(fields: [followId], references: [id], onDelete: Cascade)
+  like      Like?    @relation(fields: [likeId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, read])
+  @@index([recipientId, createdAt])
+  @@index([actorId])
+  @@map("notifications")
+}
+
+model Hashtag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts PostHashtag[]
+
+  @@index([name])
+  @@index([count])
+  @@map("hashtags")
+}
+
+model PostHashtag {
+  id        String   @id @default(uuid())
+  postId    String
+  hashtagId String
+  createdAt DateTime @default(now())
+
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, hashtagId])
+  @@index([postId])
+  @@index([hashtagId])
+  @@map("post_hashtags")
+}
+
+model Conversation {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime  @default(now())
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String   @id @default(uuid())
+  conversationId String
+  profileId      String
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, profileId])
+  @@index([profileId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  content        String   @db.Text
+  conversationId String
+  senderId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  read           Boolean  @default(false)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
 }
