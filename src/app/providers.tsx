@@ -2,7 +2,7 @@ import type React from "react";
 import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "next-themes";
 import { ToastContainer } from "react-toastify";
-import { SidebarProvider } from "./_components/ui/sidebar";
+import { SidebarProvider } from "~/components/ui/sidebar";
 
 type Props = {
   children: React.ReactNode;

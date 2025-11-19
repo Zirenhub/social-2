@@ -1,4 +1,4 @@
-import Theme from "../_components/theme";
+import Theme from "~/components/theme";
 
 type Props = {
   children: React.ReactNode;

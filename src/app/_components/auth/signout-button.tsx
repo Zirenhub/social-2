@@ -1,8 +1,8 @@
 "use client";
 import { useTransition } from "react";
 import { cn } from "~/lib/utils";
-import { Button } from "../ui/button";
-import { DropdownMenuItem } from "../ui/dropdown-menu";
+import { Button } from "~/components/ui/button";
+import { DropdownMenuItem } from "~/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import { Loader2, LogOut } from "lucide-react";
 

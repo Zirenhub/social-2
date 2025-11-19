@@ -1,13 +1,13 @@
 "use client";
 
-import { Label } from "~/app/_components/ui/label";
-import { Button } from "~/app/_components/ui/button";
+import { Label } from "~/components/ui/label";
+import { Button } from "~/components/ui/button";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "~/app/_components/ui/input-group";
-import { Separator } from "~/app/_components/ui/separator";
+} from "~/components/ui/input-group";
+import { Separator } from "~/components/ui/separator";
 import { ROUTES } from "~/constants/routes";
 import { cn } from "~/lib/utils";
 import useLogin from "~/hooks/useLogin";

@@ -1,20 +1,20 @@
-import { AppSidebar } from "../_components/sidebar";
-import Theme from "../_components/theme";
-import { SidebarTrigger } from "../_components/ui/sidebar";
+import { AppSidebar } from "~/components/sidebar";
+import Theme from "~/components/theme";
+import { SidebarTrigger } from "~/components/ui/sidebar";
 
 export default async function MainLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="flex">
+    <>
       <AppSidebar />
-      <div className="flex w-full flex-col">
-        <div className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-40 flex items-center justify-between border-b px-4 py-2 backdrop-blur">
+      <div className="flex h-screen min-w-0 flex-1 flex-col">
+        <header className="bg-background supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 flex h-14 items-center justify-between border-b px-6 backdrop-blur-sm">
           <SidebarTrigger className="h-fit w-fit cursor-pointer p-3" />
           <Theme className="h-fit w-fit border-0 bg-transparent p-3 shadow-none dark:bg-transparent" />
-        </div>
-        <div>{children}</div>
+        </header>
+        <div className="flex-1 overflow-auto">{children}</div>
       </div>
-    </div>
+    </>
   );
 }

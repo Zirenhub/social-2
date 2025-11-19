@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "~/app/_components/ui/button";
+import { Button } from "~/components/ui/button";
 import SignUpEmail from "./_steps/email";
 import { useState } from "react";
 import SignUpPassword from "./_steps/password";
 import useSignUp from "~/hooks/useSignUp";
 import SignUpProfile from "./_steps/profile";
-import { Separator } from "~/app/_components/ui/separator";
+import { Separator } from "~/components/ui/separator";
 import { ROUTES } from "~/constants/routes";
 import Link from "next/link";
 
@@ -17,7 +17,7 @@ function SignUpPage() {
     register,
     watch,
     setValue,
-    onEmailBlur,
+    triggerEmailCheck,
     isSubmitting,
     formState: { errors, isValidating, isSubmitSuccessful },
     onSubmit,
@@ -56,7 +56,10 @@ function SignUpPage() {
   }
 
   const nextStep = async () => {
-    if (step < 3) {
+    if (step === 1) {
+      await triggerEmailCheck();
+    }
+    if (step < 3 && canContinue()) {
       setStep(step + 1);
     }
   };
@@ -99,11 +102,7 @@ function SignUpPage() {
         className="flex max-w-[350px] flex-col items-center justify-center"
       >
         {step === 1 && (
-          <SignUpEmail
-            emailRegister={emailRegister}
-            errors={errors.email}
-            onEmailBlur={onEmailBlur}
-          />
+          <SignUpEmail emailRegister={emailRegister} errors={errors.email} />
         )}
         {step === 2 && (
           <SignUpPassword
@@ -141,6 +140,7 @@ function SignUpPage() {
             {errors.root.message}
           </p>
         )}
+        {/* push back to related step  */}
 
         <Button
           onClick={nextStep}

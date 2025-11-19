@@ -1,20 +1,19 @@
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
-import { Label } from "~/app/_components/ui/label";
+import { Label } from "~/components/ui/label";
 import { AlertCircle } from "lucide-react";
 import { cn } from "~/lib/utils";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "~/app/_components/ui/input-group";
+} from "~/components/ui/input-group";
 
 type Props = {
   emailRegister: UseFormRegisterReturn<"email">;
   errors: FieldError | undefined;
-  onEmailBlur: () => Promise<void>;
 };
 
-function SignUpEmail({ emailRegister, errors, onEmailBlur }: Props) {
+function SignUpEmail({ emailRegister, errors }: Props) {
   const showError = errors && errors.type !== "invalid_string";
 
   return (
@@ -33,7 +32,6 @@ function SignUpEmail({ emailRegister, errors, onEmailBlur }: Props) {
         <InputGroup>
           <InputGroupInput
             {...emailRegister}
-            onBlur={onEmailBlur}
             id="email"
             type="email"
             placeholder="name@example.com"

@@ -22,7 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "../_components/ui/sidebar";
+} from "~/components/ui/sidebar";
 import Theme from "./theme";
 import SignOutButton from "./auth/signout-button";
 import {
@@ -31,10 +31,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+} from "~/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { cn } from "~/lib/utils";
-import { Button } from "./ui/button";
+import { Button } from "~/components/ui/button";
 
 const menuItems = [
   { title: "Home", icon: Home, url: "#" },

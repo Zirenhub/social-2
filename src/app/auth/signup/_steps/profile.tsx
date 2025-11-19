@@ -1,5 +1,5 @@
-import { Textarea } from "~/app/_components/ui/textarea";
-import { Label } from "~/app/_components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { Label } from "~/components/ui/label";
 import {
   MapPinIcon,
   AtSignIcon,
@@ -10,8 +10,8 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "~/app/_components/ui/input-group";
-import DatePicker from "~/app/_components/date-picker";
+} from "~/components/ui/input-group";
+import DatePicker from "~/components/date-picker";
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
 import {
   BIO_CONSTS,

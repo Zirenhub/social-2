@@ -31,9 +31,7 @@ export default function RootLayout({
       className={`${stackHeadline.variable}`}
     >
       <body>
-        <Providers>
-          <main className="min-h-screen w-full">{children}</main>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

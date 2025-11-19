@@ -1,11 +1,11 @@
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
-import { Label } from "~/app/_components/ui/label";
+import { Label } from "~/components/ui/label";
 import { AlertCircle } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "~/app/_components/ui/input-group";
+} from "~/components/ui/input-group";
 
 type Props = {
   passwordRegisters: {
