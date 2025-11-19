@@ -1,146 +1,113 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2, MoreHorizontal } from "lucide-react";
-import { Card, CardContent, CardFooter } from "../ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-
-interface PostCardProps {
-  id: string;
-  author: {
-    name: string;
-    handle: string;
-    avatar: string;
-  };
-  content: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  image?: string;
-}
+import { Card, CardContent } from "~/components/ui/card";
+import type { PostQueryType } from "~/types/post/post";
+import { usePostActions } from "~/hooks/post/usePostActions";
+import PostHeader from "./post-header";
+import { toast } from "react-toastify";
+import PostContent from "./post-content";
+import PostImage from "./post-image";
+import PostStats from "./post-stats";
+import PostActions from "./post-actions";
+import { useState } from "react";
 
 function PostCard({
   id,
-  author,
   content,
-  timestamp,
+  profile,
+  createdAt,
+  isLiked,
+  imageUrls,
+  isOwner,
+  views,
   likes,
   comments,
-  image,
-}: PostCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(likes);
+  isBookmarked,
+}: PostQueryType) {
+  // const [optimisticIsLiked, setOptimisticIsLiked] = useState(isLiked);
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+  const {
+    toggleLike,
+    toggleBookmark,
+    deletePost,
+    isLikePending,
+    isBookmarkPending,
+    isDeletePending,
+  } = usePostActions({ postId: id });
+
+  // const handleLike = () => {
+  //   setOptimisticIsLiked(!optimisticIsLiked);
+  //   toggleLike();
+  // };
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this post?")) {
+      deletePost();
+    }
+  };
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(`${window.location.origin}/post/${id}`);
+    toast.success("Link copied to clipboard");
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="border-border shadow-sm transition-shadow duration-300 hover:shadow-md">
-        <CardContent className="py-0">
-          <div className="mb-4 flex items-start gap-3 sm:gap-4">
-            <Avatar className="h-10 w-10 flex-shrink-0">
-              <AvatarImage src={author.avatar || "/placeholder.svg"} />
-              <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+    <>
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="mx-auto w-full max-w-2xl min-w-[240px]"
+      >
+        <Card className="border-border/40 bg-card/50 hover:border-border/60 hover:shadow-primary/5 overflow-hidden border py-3 backdrop-blur-sm transition-all duration-300 hover:shadow-lg">
+          <CardContent className="p-0">
+            <PostHeader
+              profile={profile}
+              createdAt={createdAt}
+              isOwnPost={isOwner}
+              onDelete={handleDelete}
+              onCopyLink={handleCopyLink}
+            />
 
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center justify-between">
-                <div className="flex min-w-0 items-center gap-2">
-                  <p className="text-foreground truncate text-sm font-semibold">
-                    {author.name}
-                  </p>
-                  <p className="text-muted-foreground truncate text-xs">
-                    @{author.handle}
-                  </p>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="hover:bg-muted text-muted-foreground hover:text-foreground flex-shrink-0 rounded-full p-1 transition-colors"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </motion.button>
-              </div>
-              <p className="text-muted-foreground text-xs">{timestamp}</p>
-            </div>
-          </div>
+            <PostContent content={content} />
 
-          <p className="text-foreground text-sm leading-relaxed break-words">
-            {content}
-          </p>
+            <PostImage imageUrls={imageUrls} />
 
-          {image && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="bg-muted mb-4 h-48 overflow-hidden rounded-lg sm:h-64"
-            >
-              <img
-                src={image || "/placeholder.svg"}
-                alt="Post"
-                className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-              />
-            </motion.div>
-          )}
-        </CardContent>
+            <PostStats
+              views={views}
+              comments={comments}
+              onCommentsClick={() => {
+                toast.info("Comments feature coming soon!");
+              }}
+            />
 
-        <CardFooter className="border-border border-t">
-          <motion.div
-            layout
-            className="text-muted-foreground flex w-full items-center gap-4 text-xs sm:gap-6"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLike}
-              className="hover:text-foreground group flex items-center gap-2 transition-colors"
-            >
-              <motion.div
-                animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Heart
-                  className={`h-4 w-4 transition-colors ${
-                    isLiked
-                      ? "fill-red-500 text-red-500"
-                      : "text-muted-foreground group-hover:text-foreground"
-                  }`}
-                />
-              </motion.div>
-              <span className="text-xs">{likeCount}</span>
-            </motion.button>
+            <PostActions
+              likes={likes}
+              comments={comments}
+              isLiked={isLiked}
+              isBookmarked={isBookmarked}
+              onLike={toggleLike}
+              onComment={() => toast.info("Comments feature coming soon!")}
+              onBookmark={toggleBookmark}
+              onShare={handleCopyLink}
+              isLikePending={isLikePending}
+              isBookmarkPending={isBookmarkPending}
+            />
+          </CardContent>
+        </Card>
+      </motion.div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hover:text-foreground group flex items-center gap-2 transition-colors"
-            >
-              <MessageCircle className="text-muted-foreground group-hover:text-foreground h-4 w-4" />
-              <span className="text-xs">{comments}</span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hover:text-foreground group ml-auto flex items-center gap-2 transition-colors"
-            >
-              <Share2 className="text-muted-foreground group-hover:text-foreground h-4 w-4" />
-            </motion.button>
-          </motion.div>
-        </CardFooter>
-      </Card>
-    </motion.div>
+      {/* <CommentSheet
+        isOpen={isCommentSheetOpen}
+        onClose={closeCommentSheet}
+        comments={postComments}
+        isLoading={isCommentsLoading}
+        onSubmitComment={handleSubmitComment}
+        isPending={isCommentPending}
+      /> */}
+    </>
   );
 }
 
