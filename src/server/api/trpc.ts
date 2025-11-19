@@ -37,6 +37,36 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   };
 };
 
+function getPrismaErrorMessage(
+  error:
+    | Prisma.PrismaClientKnownRequestError
+    | Prisma.PrismaClientValidationError,
+): string {
+  if (error instanceof Prisma.PrismaClientValidationError) {
+    // Try to extract field name from validation error message
+    const fieldMatch = /Argument `(\w+)`/.exec(error.message);
+    const field = fieldMatch?.[1];
+    return field
+      ? `Invalid value provided for ${field}.`
+      : "Invalid data provided.";
+  }
+
+  // PrismaClientKnownRequestError
+  switch (error.code) {
+    case "P2002": {
+      const target = error.meta?.target as string[] | undefined;
+      const field = target?.[0] ?? "field";
+      return `This ${field} is already in use.`;
+    }
+    case "P2003":
+      return "Invalid reference to related record.";
+    case "P2025":
+      return "Record not found.";
+    default:
+      return "Database operation failed.";
+  }
+}
+
 /**
  * 2. INITIALIZATION
  *
@@ -44,27 +74,86 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
+
+export const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
+    let message = shape.message;
+    let httpStatus = shape.data.httpStatus;
+
+    // Handle Prisma validation errors (e.g., wrong data types, missing required fields)
+    if (error.cause instanceof Prisma.PrismaClientValidationError) {
+      httpStatus = 400;
+      message = getPrismaErrorMessage(error.cause);
+
+      return {
+        ...shape,
+        message,
+        data: {
+          ...shape.data,
+          httpStatus,
+          zodError: null,
+          prismaError: {
+            code: "VALIDATION_ERROR",
+            target: undefined,
+            message: getPrismaErrorMessage(error.cause),
+          },
+        },
+      };
+    }
+
+    // Handle Prisma known request errors (e.g., unique constraints, foreign keys)
+    if (error.cause instanceof Prisma.PrismaClientKnownRequestError) {
+      const prismaError = error.cause;
+
+      switch (prismaError.code) {
+        case "P2002":
+          httpStatus = 409;
+          message = getPrismaErrorMessage(prismaError);
+          break;
+        case "P2003":
+          httpStatus = 400;
+          message = getPrismaErrorMessage(prismaError);
+          break;
+        case "P2025":
+          httpStatus = 404;
+          message = getPrismaErrorMessage(prismaError);
+          break;
+        default:
+          httpStatus = 500;
+          message = getPrismaErrorMessage(prismaError);
+      }
+
+      return {
+        ...shape,
+        message,
+        data: {
+          ...shape.data,
+          httpStatus,
+          zodError: null,
+          prismaError: {
+            code: prismaError.code,
+            target: prismaError.meta?.target as string[] | undefined,
+            message: getPrismaErrorMessage(prismaError),
+          },
+        },
+      };
+    }
+
+    // Handle Zod errors (already handled by TRPC but we format it nicely)
     return {
       ...shape,
+      message,
       data: {
         ...shape.data,
+        httpStatus,
         zodError:
           error.cause instanceof ZodError ? error.cause.flatten() : null,
-        prismaError:
-          error.cause instanceof Prisma.PrismaClientKnownRequestError
-            ? {
-                code: error.cause.code,
-                meta: error.cause.meta,
-              }
-            : null,
+        prismaError: null,
       },
     };
   },
 });
-
 /**
  * Create a server-side caller.
  *
