@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
-import { handleTRPCError } from "~/lib/handle-trpc-error";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { LoginZ, SignUpZ } from "~/types/auth";
 import { EmailZ } from "~/types/auth/email";
@@ -25,38 +24,34 @@ export const authRouter = createTRPCRouter({
       });
     }
     const hashedPassword = await bcrypt.hash(input.password, 10);
-    try {
-      const newUser = await ctx.db.user.create({
-        data: {
-          email: input.email,
-          hashedPassword,
-          profile: {
-            create: {
-              username: input.username,
-              firstName: input.firstName,
-              lastName: input.lastName,
-              location: input.location,
-              bio: input.bio,
-              birthDate: input.birthDate,
-            },
+    const newUser = await ctx.db.user.create({
+      data: {
+        email: input.email,
+        hashedPassword,
+        profile: {
+          create: {
+            username: input.username,
+            firstName: input.firstName,
+            lastName: input.lastName,
+            location: input.location,
+            bio: input.bio,
+            birthDate: input.birthDate,
           },
         },
-        include: { profile: true },
+      },
+      include: { profile: true },
+    });
+    if (!newUser.profile) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "User profile creation failed.",
       });
-      if (!newUser.profile) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "User profile creation failed.",
-        });
-      }
-      return {
-        id: newUser.id,
-        email: newUser.email,
-        profileId: newUser.profile.id,
-      };
-    } catch (err) {
-      handleTRPCError(err);
     }
+    return {
+      id: newUser.id,
+      email: newUser.email,
+      profileId: newUser.profile.id,
+    };
   }),
   login: publicProcedure.input(LoginZ).mutation(async ({ ctx, input }) => {
     const user = await ctx.db.user.findUnique({
