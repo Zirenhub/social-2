@@ -119,9 +119,9 @@ export default function useSignUp() {
     },
   });
 
-  const onEmailBlur = async () => {
+  const triggerEmailCheck = async () => {
     if (email && !isEmailValid && email !== lastCheckedEmail) {
-      checkEmailExists.mutate({ email });
+      await checkEmailExists.mutateAsync({ email });
     }
   };
 
@@ -131,7 +131,7 @@ export default function useSignUp() {
       signup.isPending ||
       form.formState.isSubmitting ||
       checkEmailExists.isPending,
-    onEmailBlur,
+    triggerEmailCheck,
     onSubmit,
   };
 }
